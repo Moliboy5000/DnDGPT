@@ -1,35 +1,31 @@
-import openai
+from openai import OpenAI
+import functions
 import os
 
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(
+    api_key=os.environ.get("OPENAI_API_KEY"),  
+)
 
-def send_message(user_input, model="gpt-3.5-turbo"):
+
+def send_prompt(messages, model="gpt-3.5-turbo"):
     """
-    Sends a message to the OpenAI API and appends the response to the conversation history.
+    Communicates with the ChatGPT API and returns either a message or a function call based on the response.
 
-    Args:
-        user_input (str): The latest input from the user.
-        model (str): The model to use (default: "gpt-3.5-turbo").
+    Parameters:
+        - messages (list): List of message objects to send to the model.
+        - model (str): The model to use, e.g., "gpt-4".
 
     Returns:
-        str: The model's response.
+        - str: The response, either a message or a function call result.
     """
-    # Add user input to the conversation history
-    conversation_history.append({"role": "user", "content": user_input})
-
     try:
-        # Send the conversation history to the model
-        response = openai.ChatCompletion.create(
-            model=model,
-            messages=conversation_history,
-            max_tokens=500,
-            temperature=0.7
+        # Send the messages to the API
+        response = client.chat.completions.create(
+            messages=messages,
+            model=model
         )
-        # Extract the assistant's response
-        assistant_response = response['choices'][0]['message']['content']
-        # Add the assistant's response to the conversation history
-        conversation_history.append({"role": "assistant", "content": assistant_response})
-        return assistant_response
+        return response.choices[0].message.content
+    
     except Exception as e:
-        return f"Error: {e}"
+        return f"An error occurred: {str(e)}"
